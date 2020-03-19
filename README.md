@@ -20,7 +20,7 @@ searches each file for the following:
 - `<cfinclude>` tags (CFML)
 - `include` statements (cfscript)
 
-The program then tries to locate the file by a best-effort strategy. This reference then
+The program then tries to locate any references by a best-effort strategy. This reference then
 becomes an edge of the graph.
 
 ## Limitations
