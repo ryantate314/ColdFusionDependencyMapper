@@ -114,11 +114,11 @@ namespace CFDependencyMapper.Console
             }//foreach included reference
 
             //Find Application File
-            //var appFile = fileSearcher.GetApplicationFile(FileName);
-            //if (appFile != null)
-            //{
-            //    files.Add(appFile);
-            //}
+            var appFile = fileSearcher.GetApplicationFile(FileName);
+            if (appFile != null)
+            {
+                files.Add(appFile);
+            }
 
             return files;
         }
