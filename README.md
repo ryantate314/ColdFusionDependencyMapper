@@ -4,6 +4,12 @@
 This project is a rough-and-dirty code parser which crawls through ColdFusion
 source files to build a graph of all referenced components or included files.
 
+<div style="text-align: center">
+    <a href="https://i.imgur.com/uaPoKIf.jpg" target="_blank">
+        <img src="https://i.imgur.com/uaPoKIf.jpg" width="400px" alt="Example Network Diagram">
+    </a>
+</div>
+
 ## Mechanics
 The project prompts the user for the web root and any root component directories. It then
 traverses the directory tree to build up a queue containing each code file. It then
