@@ -58,3 +58,12 @@ for each entry is an array of file names referenced by the key file.
     ...
 }
 ```
+
+## Usage
+1. Build and execute the C# application using Visual Studio.
+2. Provide the application with the full directory path to the Web Root directory for the ColdFusion application. Provide any additional component directories.
+3. Give a file path for the output JSON file
+4. Execute visualize.py
+```
+py visualize.py <file.json> <graph title>
+```
