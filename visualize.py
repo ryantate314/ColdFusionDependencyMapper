@@ -2,21 +2,54 @@ import matplotlib.pyplot as plt
 import matplotlib.lines as mlines
 import networkx as nx
 import json
-import sys
 import math
+import argparse
 
-if (len(sys.argv) < 4):
-    print("Usage: py " + sys.argv[0] + " {dataFile} {seed} {graphTitle}")
-    exit()
 
-_,dataFile,seed,title = sys.argv
+def getFileLabel(name, redact):
+    label = name.split("\\")[-1] #Get local file name
 
-seed = int(seed)
+    if (redact):
+        label = ""
+    
+    return label
+
+
+applicationsColor = "#4F7CAC"
+adminColor = "#FF8360"
+scheduledJobsColor = "#C1666B"
+componentColor = "#4A9950"
+webServiceColor = "#D4B483"
+miscColor = "#878787"
+# Color the nodes based on the submodule
+def getColor(name):
+    color = miscColor
+    if ("\\applications\\" in node.lower()):
+        color = applicationsColor
+    elif ("\\admin\\" in node.lower()):
+        color = adminColor
+    elif ("\\scheduledjobs\\" in node.lower()):
+        color = scheduledJobsColor
+    elif ("\\webservices\\" in node.lower()):
+        color = webServiceColor
+    elif (node.lower().endswith(".cfc")):
+        color = componentColor
+    else:
+        print("   Outlier Color: " + node)
+    return color
+
+parser = argparse.ArgumentParser()
+parser.add_argument("dataFile")
+parser.add_argument("title")
+parser.add_argument("--seed", "-s", type=int, help="Controls the node positions.")
+parser.add_argument("--redact", action="store_true", default=False, help="Omit file name labels.")
+parser.add_argument("--distance", "-d", type=float, default=4, help="Multiplier to control the ideal distance between nodes in the graph.")
+args = parser.parse_args()
 
 graph = nx.DiGraph()
 
 #Parse File
-with open(dataFile) as f:
+with open(args.dataFile) as f:
     data = json.load(f)
 
 for fileName, references in data.items():
@@ -26,42 +59,26 @@ for fileName, references in data.items():
 
 #Classify the files by type and set node colors
 print("Adding color...")
-cfmColor = "#77A6B6"
-componentColor = "#4F7CAC"
-webServiceColor = "#593F62"
-applicationColor = "#49A078"
-
 colors = []
 for node in graph.nodes():
-    color = "white"
-    if (node.lower().endswith("application.cfm")):
-        color = applicationColor
-    elif (node.lower().endswith(".cfm")):
-        color = cfmColor
-    elif ("webservices" in node.lower()):
-        color = webServiceColor
-    elif (node.lower().endswith(".cfc")):
-        color = componentColor
-    else:
-        print("   Outlier: " + node)
-    colors.append(color)
+    colors.append(getColor(node))
 
 #Get the top n percentile of nodes, based on how many times they are referenced. We will give these labels.
 print("Finding most important nodes...")
 centrality = nx.algorithms.centrality.in_degree_centrality(graph)
 sortedNodes = sorted(centrality.items(), key=lambda x: x[1], reverse=True)
-percentage = int(math.ceil(len(sortedNodes) * 0.05))
+percentage = int(math.ceil(len(sortedNodes) * 0.03))
 labels = {}
 for i in range(0, percentage):
-    labels[sortedNodes[i][0]] = sortedNodes[i][0].split("\\")[-1]
+    labels[sortedNodes[i][0]] = getFileLabel(sortedNodes[i][0], args.redact)
 
 
 #Execute positioning algorithm
 print("Positioning nodes...")
-k = 4 / math.sqrt(graph.number_of_nodes()) #The ideal distance apart. 1/sqrt(n) is the default
+k = args.distance / math.sqrt(graph.number_of_nodes()) #The ideal distance apart. 1/sqrt(n) is the default
 pos = nx.spring_layout(graph,
-                        k=k,
-                        seed=seed)
+                       k=k,
+                       seed=args.seed)
 
 
 # Draw Graph
@@ -71,31 +88,39 @@ nodeSize = 75
 nodeShape = "D"
 
 plt.figure(figsize=(50, 50))
-plt.title(title, fontsize=50)
+plt.title(args.title, fontsize=50)
 
 #Build Legend
 legendProps = {
-    "marker": nodeShape,
+    "marker":  nodeShape,
     "markersize": 30,
     "linestyle": ""
 }
 appLegendEntry = mlines.Line2D([], [],
-                                color=applicationColor,
-                                label="Application Files",
+                                color=applicationsColor,
+                                label="App Module Web Pages",
+                                **legendProps)
+adminLegendEntry = mlines.Line2D([], [],
+                                color=adminColor,
+                                label="Admin Web Pages",
                                 **legendProps)
 compLegendEntry = mlines.Line2D([], [],
                                 color=componentColor,
-                                label="Components",
+                                label="Class Files",
                                 **legendProps)
 wsLegendEntry = mlines.Line2D([], [],
                                 color=webServiceColor,
                                 label="Web Services",
                                 **legendProps)
-webLegendEntry = mlines.Line2D([], [],
-                                color=cfmColor,
-                                label="Web Pages",
+sjLegendEntry = mlines.Line2D([], [],
+                                color=scheduledJobsColor,
+                                label="Scheduled Jobs",
                                 **legendProps)
-plt.legend(handles=[appLegendEntry, compLegendEntry, wsLegendEntry, webLegendEntry],
+webLegendEntry = mlines.Line2D([], [],
+                                color=miscColor,
+                                label="Misc Web Pages",
+                                **legendProps)
+plt.legend(handles=[appLegendEntry, adminLegendEntry, compLegendEntry, wsLegendEntry, sjLegendEntry, webLegendEntry],
             fontsize=30)
 
 #Draw the graph
