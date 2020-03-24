@@ -20,8 +20,8 @@ searches each file for the following:
 - `<cfinclude>` tags (CFML)
 - `include` statements (cfscript)
 
-The program then tries to locate any references by a best-effort strategy. This reference then
-becomes an edge of the graph.
+The program then tries to locate any references by a best-effort strategy. These references then
+become edges of the graph.
 
 ## Limitations
 
@@ -58,6 +58,13 @@ for each entry is an array of file names referenced by the key file.
     ...
 }
 ```
+
+## Visualizer Script
+The visualize python script uses [Networkx](https://networkx.github.io/) and [Matplotlib](https://matplotlib.org/) to arrange and print the nodes. Use
+```
+py visualize.py -h
+```
+for a list of options.
 
 ## Usage
 1. Build and execute the C# application using Visual Studio.
