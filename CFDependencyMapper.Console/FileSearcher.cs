@@ -7,19 +7,27 @@ using System.Text;
 namespace CFDependencyMapper.Console
 {
 
-    class FileSearcher
+    public class FileSearcher
     {
         private readonly IFileSystem _fileSystem;
         private List<string> _rootDirectories;
-        public string WebRoot { get; private set; }
+        private List<string> _referenceDirectories;
+
+        public FileSearcher(IFileSystem system)
+        {
+            _fileSystem = system;
+            _rootDirectories = new List<string>();
+            _referenceDirectories = new List<string>();
+        }
 
         public FileSearcher(IFileSystem system, string webRoot)
         {
             _fileSystem = system;
-            _rootDirectories = new List<string>();
-            WebRoot = webRoot;
-
-            AddRootDirectory(webRoot);
+            _rootDirectories = new List<string>()
+            {
+                webRoot
+            };
+            _referenceDirectories = new List<string>();
         }
 
         public void AddRootDirectory(string directory)
@@ -27,9 +35,25 @@ namespace CFDependencyMapper.Console
             _rootDirectories.Add(directory);
         }
 
+        public void AddRootDirectories(IEnumerable<string> directories)
+        {
+            _rootDirectories.AddRange(directories);
+        }
+
+        public void AddReferenceDirectories(List<string> referenceDirectories)
+        {
+            _referenceDirectories.AddRange(referenceDirectories);
+        }
+
+        public void AddReferenceDirectory(string directory)
+        {
+            _referenceDirectories.Add(directory);
+        }
+
         private bool IsRootDirectory(string directory)
         {
-            return _rootDirectories.Any(x => _fileSystem.Path.ArePathsEqual(directory, x));
+            return _rootDirectories.Any(x => _fileSystem.Path.ArePathsEqual(directory, x))
+                || _referenceDirectories.Any(x => _fileSystem.Path.ArePathsEqual(directory, x));
         }
 
         /// <summary>
@@ -52,7 +76,7 @@ namespace CFDependencyMapper.Console
                     file = new CodeFile(applicationFile, _fileSystem);
                     break;
                 }
-            } while (!IsRootDirectory(directory) && _fileSystem.Path.GetDirectoryName(directory) != null);
+            } while (_fileSystem.Path.GetDirectoryName(directory) != null && !IsRootDirectory(directory));
 
             return file;
         }
@@ -61,7 +85,7 @@ namespace CFDependencyMapper.Console
         {
             CodeFile file = null;
 
-            foreach (string rootDir in _rootDirectories)
+            foreach (string rootDir in _rootDirectories.Concat(_referenceDirectories))
             {
                 string path = _fileSystem.Path.Combine(rootDir, relativePath);
                 if (_fileSystem.File.Exists(path))
@@ -80,7 +104,7 @@ namespace CFDependencyMapper.Console
             return path.EndsWith(".git") || path.EndsWith("testbox") || path.EndsWith("testing") || path.EndsWith("testappentry");
         }
 
-        public IEnumerable<CodeFile> GetAllFiles()
+        public IEnumerable<CodeFile> GetRootFiles()
         {
             Queue<string> queue = new Queue<string>();
             foreach (string dir in _rootDirectories)

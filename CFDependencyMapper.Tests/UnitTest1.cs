@@ -58,10 +58,21 @@ namespace CFDependencyMapper.Tests
         }
 
         [Test]
-        public void TestCodeFileEquals()
+        [TestCase(@"C:\Temp\Foo.cfm", @"C:\Temp\Foo.cfm")]
+        [TestCase(@"C:\Temp/Foo.cfm", @"C:\Temp\Foo.cfm")]
+        public void TestCodeFileEquals(string fileName1, string fileName2)
         {
-            var file1 = new CodeFile("C:/Temp/Test.txt", _fileSystem);
-            var file2 = new CodeFile("C:/Temp/Test2.txt", _fileSystem);
+            var file1 = new CodeFile(fileName1, _fileSystem);
+            var file2 = new CodeFile(fileName2, _fileSystem);
+            Assert.IsTrue(file1.Equals(file2));
+        }
+
+        [Test]
+        [TestCase(@"C:\Temp\Foo.cfm", @"C:\Temp\Foo2.cfm")]
+        public void TestCodeFilNotEquals(string fileName1, string fileName2)
+        {
+            var file1 = new CodeFile(fileName1, _fileSystem);
+            var file2 = new CodeFile(fileName2, _fileSystem);
             Assert.IsFalse(file1.Equals(file2));
         }
 
@@ -199,9 +210,18 @@ namespace CFDependencyMapper.Tests
             _fileSystem.AddDirectory("C:/Temp/sub");
             _fileSystem.AddDirectory("C:/Temp/sub/foo");
 
-            Assert.AreEqual("C:\\test.cfm", _fileSystem.Path.NormalizePath("test.cfm"));
-            Assert.AreEqual("C:\\test\\sub", _fileSystem.Path.NormalizePath("C:/test/sub"));
-            Assert.AreEqual("C:\\test\\sub\\test.cfm", _fileSystem.Path.NormalizePath("C:/test/sub/foo/../test.cfm"));
+            Assert.AreEqual("c:\\test.cfm", _fileSystem.Path.NormalizePath("test.cfm"));
+            Assert.AreEqual("c:\\test\\sub", _fileSystem.Path.NormalizePath("C:/test/sub"));
+            Assert.AreEqual("c:\\test\\sub\\test.cfm", _fileSystem.Path.NormalizePath("C:/test/sub/foo/../test.cfm"));
         }
+
+        [Test]
+        public void TestGetFullPath()
+        {
+            string fullPath = _fileSystem.Path.GetFullPath(@"C:\Temp\..\Foo.cfm");
+            Assert.AreEqual(@"C:\Foo.cfm", fullPath);
+        }
+
+        
     }
 }

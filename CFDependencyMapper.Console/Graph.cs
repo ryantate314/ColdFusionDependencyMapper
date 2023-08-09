@@ -7,7 +7,7 @@ using System.Text;
 
 namespace CFDependencyMapper.Console
 {
-    class Graph
+    public class Graph
     {
         public HashSet<Node> Nodes { get; private set; }
 
@@ -28,7 +28,7 @@ namespace CFDependencyMapper.Console
         }
     }
 
-    class Node
+    public class Node
     {
         public CodeFile CodeFile { get; private set; }
         public HashSet<Node> Edges { get; private set; }

@@ -44,6 +44,7 @@ parser.add_argument("title")
 parser.add_argument("--seed", "-s", type=int, help="Controls the node positions.")
 parser.add_argument("--redact", action="store_true", default=False, help="Omit file name labels.")
 parser.add_argument("--distance", "-d", type=float, default=4, help="Multiplier to control the ideal distance between nodes in the graph.")
+parser.add_argument("--labelPercentile", "-l", type=float, default=0.03, help="The top n percentile of nodes which display the file name on the graph.")
 args = parser.parse_args()
 
 graph = nx.DiGraph()
@@ -67,7 +68,7 @@ for node in graph.nodes():
 print("Finding most important nodes...")
 centrality = nx.algorithms.centrality.in_degree_centrality(graph)
 sortedNodes = sorted(centrality.items(), key=lambda x: x[1], reverse=True)
-percentage = int(math.ceil(len(sortedNodes) * 0.03))
+percentage = int(math.ceil(len(sortedNodes) * args.labelPercentile))
 labels = {}
 for i in range(0, percentage):
     labels[sortedNodes[i][0]] = getFileLabel(sortedNodes[i][0], args.redact)
@@ -129,7 +130,7 @@ nx.draw_networkx_edges(graph,
                     alpha=0.3,
                     width=0.2,
                     arrowsize=7,
-                    linewidths=0,
+                    # linewidths=0,
                     node_size=nodeSize,
                     node_shape=nodeShape)
 nx.draw_networkx_nodes(graph,

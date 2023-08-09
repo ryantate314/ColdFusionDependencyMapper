@@ -7,7 +7,7 @@ using System.Text.RegularExpressions;
 
 namespace CFDependencyMapper.Console
 {
-    class CodeFile
+    public class CodeFile
     {
         public string FileName { get; private set; }
         private string _normalizedFileName;
@@ -24,15 +24,29 @@ namespace CFDependencyMapper.Console
         public CodeFile(string fileName, IFileSystem fileSystem)
         {
             FileName = fileName;
-            _normalizedFileName = fileSystem.Path.NormalizePath(fileName);
             FileSystem = fileSystem;
+            _normalizedFileName = NormalizePath(fileName);
             _exists = new Lazy<bool>(() => FileSystem.File.Exists(FileName));
+        }
+
+        private string NormalizePath(string fileName)
+        {
+            return FileSystem.Path.GetFullPath(
+                FileSystem.Path.NormalizePath(fileName)
+            );
         }
 
         public override bool Equals(object obj)
         {
-            var castObj = (CodeFile)obj;
+            var castObj = obj as CodeFile;
+            if (castObj == null)
+                return false;
             return FileSystem.Path.ArePathsEqual(_normalizedFileName, castObj.FileName);
+        }
+
+        public bool IsSubitem(string directory)
+        {
+            return _normalizedFileName.StartsWith(directory, StringComparison.OrdinalIgnoreCase);
         }
 
         private string GetContents()
@@ -78,7 +92,8 @@ namespace CFDependencyMapper.Console
             var files = new List<CodeFile>();
             string content = GetContents();
 
-            var componentRefs = GetComponentReferences(content);
+            // ColdFusion Component CFCs are referenced using . notation, e.g. CFC.Foo.Bar()
+            List<ComponentReference> componentRefs = GetComponentReferences(content);
             foreach (var comp in componentRefs)
             {
                 string relativePath = comp.RelativePath.Replace('.', FileSystem.Path.DirectorySeparatorChar) + ".cfc";
@@ -89,8 +104,9 @@ namespace CFDependencyMapper.Console
                 }
             }
 
-            var includeRefs = GetIncludedFiles(content);
-            var currentDirectory = FileSystem.Path.GetDirectoryName(FileName);
+            // cfm include files are referenced using paths.
+            List<IncludeReference> includeRefs = GetIncludedFiles(content);
+            string currentDirectory = FileSystem.Path.GetDirectoryName(FileName);
             foreach (var include in includeRefs)
             {
                 CodeFile foundFile = null;

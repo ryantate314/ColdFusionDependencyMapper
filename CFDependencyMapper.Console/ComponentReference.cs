@@ -4,7 +4,7 @@ using System.Text;
 
 namespace CFDependencyMapper.Console
 {
-    class ComponentReference
+    public class ComponentReference
     {
         public CodeFile SourceFile { get; private set; }
         public string RelativePath { get; private set; }
